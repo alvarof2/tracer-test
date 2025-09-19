@@ -151,7 +151,7 @@ jobs:
       uses: actions/attest-build-provenance@v3
       with:
         subject-name: ghcr.io/${{ github.repository }}
-        subject-digest: ${{ steps.meta.outputs.digest }}
+        subject-path: ghcr.io/${{ github.repository }}
         push-to-registry: true
 
     - name: Sign Docker image
