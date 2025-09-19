@@ -152,6 +152,7 @@ jobs:
         cache-to: type=gha,mode=max
 
     # 🔒 Sigstore attestation for build provenance
+    # Verify with: gh attestation verify ghcr.io/alvarof2/tracer-test:v0.0.1
     - name: Generate Sigstore build attestation
       uses: actions/attest-build-provenance@v1
       with:
