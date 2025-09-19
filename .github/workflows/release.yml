@@ -73,7 +73,7 @@ jobs:
         echo "digest=sha256:$DIGEST" >> $GITHUB_OUTPUT
 
     - name: Generate provenance attestation
-      uses: actions/attest-build-provenance@v1
+      uses: actions/attest-build-provenance@v3
       with:
         subject-name: tracer-test-${{ matrix.suffix }}
         subject-digest: ${{ steps.digest.outputs.digest }}
@@ -129,10 +129,17 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        provenance: true
+        provenance: false
         sbom: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Generate Docker image provenance attestation
+      uses: actions/attest-build-provenance@v3
+      with:
+        subject-name: ghcr.io/${{ github.repository }}
+        subject-digest: ${{ steps.meta.outputs.digest }}
+        push-to-registry: true
 
   release:
     needs: [build, docker]
