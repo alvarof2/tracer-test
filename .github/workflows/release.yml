@@ -151,44 +151,40 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    # - name: Wait for image to be available
-    #   run: |
-    #     echo "Waiting for Docker image to be fully pushed..."
-    #     sleep 10
+    # 🔒 Sigstore attestation for build provenance
+    - name: Generate Sigstore build attestation
+      uses: actions/attest-build-provenance@v1
+      with:
+        subject-name: ghcr.io/${{ github.repository }}
+        subject-digest: ${{ steps.build-push.outputs.digest }}
+        push-to-registry: true
 
-    # UNTESTED
-    # These are cosign attestations, visible with cosign tree.
-    # Generate cosign-signed attestations (in addition to OCI attestations from build-push-action)
-    # - name: Generate SBOM file
-    #   run: docker sbom ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format spdx-json > sbom.json
+    # 📦 Extract SBOMs for each platform
+    - name: Extract SBOMs
+      run: |
+        docker buildx imagetools inspect ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }} \
+          --format '{{ json .SBOM."linux/amd64" }}' > sbom-amd64.spdx.json
 
-    # - name: Attest SBOM with cosign
-    #   run: cosign attest --yes --type spdx --predicate sbom.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
-    #   env:
-    #     COSIGN_EXPERIMENTAL: 1
+        docker buildx imagetools inspect ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }} \
+          --format '{{ json .SBOM."linux/arm64" }}' > sbom-arm64.spdx.json
 
-    # - name: Attest provenance with cosign
-    #   run: cosign attest --yes --type slsaprovenance --predicate ${{ steps.provenance.outputs.bundle }} ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
-    #   env:
-    #     COSIGN_EXPERIMENTAL: 1
+    # 🔒 Sigstore SBOM attestation (amd64)
+    - name: Generate Sigstore SBOM attestation (amd64)
+      uses: actions/attest-sbom@v3
+      with:
+        subject-name: ghcr.io/${{ github.repository }}
+        subject-digest: ${{ steps.build-push.outputs.digest }}
+        sbom-path: sbom-amd64.spdx.json
+        push-to-registry: true
 
-    # This is an OCI attestation, not visible with cosign tree.
-    # It's visible with docker buildx imagetools inspect ghcr.io/alvarof2/tracer-test:v0.0.1 --format '{{ json .SBOM }}' | jq .
-    # - name: Generate SBOM attestation
-    #   uses: actions/attest-sbom@v3
-    #   with:
-    #     subject-name: ghcr.io/${{ github.repository }}
-    #     subject-digest: ${{ steps.build-push.outputs.digest }}
-    #     push-to-registry: true
-
-    # This is an OCI attestation, not visible with cosign tree.
-    # It's visible with docker buildx imagetools inspect ghcr.io/alvarof2/tracer-test:v0.0.1 --format '{{ json .Provenance }}'
-    # - name: Generate Docker image provenance attestation
-    #   uses: actions/attest-build-provenance@v3
-    #   with:
-    #     subject-name: ghcr.io/${{ github.repository }}
-    #     subject-digest: ${{ steps.build-push.outputs.digest }}
-    #     push-to-registry: true
+    # 🔒 Sigstore SBOM attestation (arm64)
+    - name: Generate Sigstore SBOM attestation (arm64)
+      uses: actions/attest-sbom@v3
+      with:
+        subject-name: ghcr.io/${{ github.repository }}
+        subject-digest: ${{ steps.build-push.outputs.digest }}
+        sbom-path: sbom-arm64.spdx.json
+        push-to-registry: true
 
     - name: Install cosign
       uses: sigstore/cosign-installer@v3
