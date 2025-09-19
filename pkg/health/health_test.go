@@ -14,10 +14,12 @@ func TestNew(t *testing.T) {
 	server := New(8080)
 	if server == nil {
 		t.Error("New() returned nil server")
+		return
 	}
 
 	if server.server == nil {
 		t.Error("New() returned server with nil http.Server")
+		return
 	}
 
 	if server.server.Addr != ":8080" {
@@ -196,8 +198,7 @@ func TestServer_Start(t *testing.T) {
 
 	// Start server in goroutine
 	go func() {
-		err := server.Start()
-		if err != nil && err != http.ErrServerClosed {
+		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			t.Errorf("Start() error = %v", err)
 		}
 	}()
@@ -221,7 +222,9 @@ func TestServer_Start(t *testing.T) {
 	// Stop server
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
-	server.Stop(ctx)
+	if err := server.Stop(ctx); err != nil {
+		t.Errorf("Stop() error = %v", err)
+	}
 }
 
 func TestServer_Stop(t *testing.T) {
@@ -229,7 +232,9 @@ func TestServer_Stop(t *testing.T) {
 
 	// Start server in goroutine
 	go func() {
-		server.Start()
+		if err := server.Start(); err != nil && err != http.ErrServerClosed {
+			t.Errorf("Start() error = %v", err)
+		}
 	}()
 
 	// Give server time to start
@@ -251,7 +256,9 @@ func TestServer_Integration(t *testing.T) {
 
 	// Start server in goroutine
 	go func() {
-		server.Start()
+		if err := server.Start(); err != nil && err != http.ErrServerClosed {
+			t.Errorf("Start() error = %v", err)
+		}
 	}()
 
 	// Give server time to start
@@ -296,5 +303,7 @@ func TestServer_Integration(t *testing.T) {
 	// Stop server
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
-	server.Stop(ctx)
+	if err := server.Stop(ctx); err != nil {
+		t.Errorf("Stop() error = %v", err)
+	}
 }

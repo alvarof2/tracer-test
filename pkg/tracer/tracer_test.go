@@ -222,8 +222,7 @@ func TestTracer_Shutdown(t *testing.T) {
 
 	// Test Shutdown
 	ctx := context.Background()
-	err = tracer.Shutdown(ctx)
-	if err != nil {
+	if err := tracer.Shutdown(ctx); err != nil {
 		t.Errorf("Shutdown() error = %v", err)
 	}
 }

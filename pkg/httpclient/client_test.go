@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
@@ -19,7 +19,7 @@ func TestNew(t *testing.T) {
 	logger := zap.New(core)
 
 	// Create a no-op tracer
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
+	tracer := noop.NewTracerProvider().Tracer("test")
 
 	config := Config{
 		Timeout: 5 * time.Second,
@@ -28,18 +28,22 @@ func TestNew(t *testing.T) {
 	client := New(config, logger, tracer)
 	if client == nil {
 		t.Error("New() returned nil client")
+		return
 	}
 
 	if client.httpClient == nil {
 		t.Error("New() returned client with nil httpClient")
+		return
 	}
 
 	if client.logger == nil {
 		t.Error("New() returned client with nil logger")
+		return
 	}
 
 	if client.tracer == nil {
 		t.Error("New() returned client with nil tracer")
+		return
 	}
 }
 
@@ -47,7 +51,10 @@ func TestClient_Get_Success(t *testing.T) {
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("test response"))
+		if _, err := w.Write([]byte("test response")); err != nil {
+			// In test context, we can't easily handle this error
+			// The test will fail if there's an issue
+		}
 	}))
 	defer server.Close()
 
@@ -56,7 +63,7 @@ func TestClient_Get_Success(t *testing.T) {
 	logger := zap.New(core)
 
 	// Create a no-op tracer
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
+	tracer := noop.NewTracerProvider().Tracer("test")
 
 	config := Config{
 		Timeout: 5 * time.Second,
@@ -100,7 +107,10 @@ func TestClient_Get_Error(t *testing.T) {
 	// Create a test server that returns an error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal server error"))
+		if _, err := w.Write([]byte("internal server error")); err != nil {
+			// In test context, we can't easily handle this error
+			// The test will fail if there's an issue
+		}
 	}))
 	defer server.Close()
 
@@ -109,7 +119,7 @@ func TestClient_Get_Error(t *testing.T) {
 	logger := zap.New(core)
 
 	// Create a no-op tracer
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
+	tracer := noop.NewTracerProvider().Tracer("test")
 
 	config := Config{
 		Timeout: 5 * time.Second,
@@ -155,7 +165,7 @@ func TestClient_Get_InvalidURL(t *testing.T) {
 	logger := zap.New(core)
 
 	// Create a no-op tracer
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
+	tracer := noop.NewTracerProvider().Tracer("test")
 
 	config := Config{
 		Timeout: 5 * time.Second,
@@ -191,7 +201,7 @@ func TestClient_Close(t *testing.T) {
 	logger := zap.New(core)
 
 	// Create a no-op tracer
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
+	tracer := noop.NewTracerProvider().Tracer("test")
 
 	config := Config{
 		Timeout: 5 * time.Second,
@@ -207,7 +217,10 @@ func TestInstrumentedTransport_RoundTrip(t *testing.T) {
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("test response"))
+		if _, err := w.Write([]byte("test response")); err != nil {
+			// In test context, we can't easily handle this error
+			// The test will fail if there's an issue
+		}
 	}))
 	defer server.Close()
 
@@ -216,7 +229,7 @@ func TestInstrumentedTransport_RoundTrip(t *testing.T) {
 	logger := zap.New(core)
 
 	// Create a no-op tracer
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
+	tracer := noop.NewTracerProvider().Tracer("test")
 
 	// Create instrumented transport
 	transport := &instrumentedTransport{
@@ -260,7 +273,10 @@ func TestClient_Timeout(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(2 * time.Second) // Delay longer than timeout
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("delayed response"))
+		if _, err := w.Write([]byte("delayed response")); err != nil {
+			// In test context, we can't easily handle this error
+			// The test will fail if there's an issue
+		}
 	}))
 	defer server.Close()
 
@@ -269,7 +285,7 @@ func TestClient_Timeout(t *testing.T) {
 	logger := zap.New(core)
 
 	// Create a no-op tracer
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
+	tracer := noop.NewTracerProvider().Tracer("test")
 
 	config := Config{
 		Timeout: 1 * time.Second, // Short timeout

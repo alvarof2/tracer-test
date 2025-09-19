@@ -139,8 +139,12 @@ func cleanEndpointURL(endpoint string) string {
 
 // Shutdown gracefully shuts down the tracer
 func (t *Tracer) Shutdown(ctx context.Context) error {
-	if tp, ok := otel.GetTracerProvider().(*sdktrace.TracerProvider); ok {
-		return tp.Shutdown(ctx)
+	tp := otel.GetTracerProvider()
+	if tp == nil {
+		return nil
+	}
+	if sdkTp, ok := tp.(*sdktrace.TracerProvider); ok {
+		return sdkTp.Shutdown(ctx)
 	}
 	return nil
 }

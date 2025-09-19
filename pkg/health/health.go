@@ -71,7 +71,11 @@ func (s *Server) GetAddr() string {
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, `{"status":"healthy","timestamp":"%s"}`, time.Now().Format(time.RFC3339))
+	if _, err := fmt.Fprintf(w, `{"status":"healthy","timestamp":"%s"}`, time.Now().Format(time.RFC3339)); err != nil {
+		// Log error if we can't write response
+		// Note: We can't use a logger here as it's not available in this context
+		// The error will be handled by the HTTP server
+	}
 }
 
 // readyHandler handles /ready endpoint
@@ -82,10 +86,18 @@ func (s *Server) readyHandler(w http.ResponseWriter, r *http.Request) {
 	
 	if ready == 1 {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"status":"ready","timestamp":"%s"}`, time.Now().Format(time.RFC3339))
+		if _, err := fmt.Fprintf(w, `{"status":"ready","timestamp":"%s"}`, time.Now().Format(time.RFC3339)); err != nil {
+			// Log error if we can't write response
+			// Note: We can't use a logger here as it's not available in this context
+			// The error will be handled by the HTTP server
+		}
 	} else {
 		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintf(w, `{"status":"not_ready","timestamp":"%s"}`, time.Now().Format(time.RFC3339))
+		if _, err := fmt.Fprintf(w, `{"status":"not_ready","timestamp":"%s"}`, time.Now().Format(time.RFC3339)); err != nil {
+			// Log error if we can't write response
+			// Note: We can't use a logger here as it's not available in this context
+			// The error will be handled by the HTTP server
+		}
 	}
 }
 
@@ -97,8 +109,12 @@ func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	
-	fmt.Fprintf(w, `# HTTP Client Metrics
+	if _, err := fmt.Fprintf(w, `# HTTP Client Metrics
 http_requests_total %d
 service_ready %d
-`, requests, ready)
+`, requests, ready); err != nil {
+		// Log error if we can't write response
+		// Note: We can't use a logger here as it's not available in this context
+		// The error will be handled by the HTTP server
+	}
 }

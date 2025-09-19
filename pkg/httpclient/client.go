@@ -79,24 +79,36 @@ func (c *Client) Get(ctx context.Context, url string) (*http.Response, error) {
 	}
 
 	// Set span attributes based on response
+	contentLength := int(resp.ContentLength)
+	if contentLength < 0 {
+		contentLength = 0
+	}
 	span.SetAttributes(
 		semconv.HTTPResponseStatusCode(resp.StatusCode),
-		semconv.HTTPResponseSize(int(resp.ContentLength)),
+		semconv.HTTPResponseSize(contentLength),
 	)
 
 	// Set span status based on HTTP status code
 	if resp.StatusCode >= 400 {
 		span.SetStatus(codes.Error, fmt.Sprintf("HTTP %d", resp.StatusCode))
+		contentLength := resp.ContentLength
+		if contentLength < 0 {
+			contentLength = 0
+		}
 		c.logger.Warn("HTTP request returned error status",
 			zap.String("url", url),
 			zap.Int("status_code", resp.StatusCode),
-			zap.Int64("response_size", resp.ContentLength))
+			zap.Int64("response_size", contentLength))
 	} else {
 		span.SetStatus(codes.Ok, "")
+		contentLength := resp.ContentLength
+		if contentLength < 0 {
+			contentLength = 0
+		}
 		c.logger.Info("HTTP request completed successfully",
 			zap.String("url", url),
 			zap.Int("status_code", resp.StatusCode),
-			zap.Int64("response_size", resp.ContentLength))
+			zap.Int64("response_size", contentLength))
 	}
 
 	return resp, nil
@@ -178,9 +190,13 @@ func (t *instrumentedTransport) RoundTrip(req *http.Request) (*http.Response, er
 		)
 		tcpSpan.SetStatus(codes.Ok, "")
 		
+		contentLength := int(resp.ContentLength)
+		if contentLength < 0 {
+			contentLength = 0
+		}
 		span.SetAttributes(
 			semconv.HTTPResponseStatusCode(resp.StatusCode),
-			semconv.HTTPResponseSize(int(resp.ContentLength)),
+			semconv.HTTPResponseSize(contentLength),
 			attribute.Int64("http.duration_ms", httpDuration.Milliseconds()),
 		)
 		

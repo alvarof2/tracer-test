@@ -65,7 +65,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
-	defer log.Sync()
+	defer func() {
+		if err := log.Sync(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to sync logger: %v\n", err)
+		}
+	}()
 
 	// Initialize tracer
 	t, err := tracer.New(tracer.Config{
@@ -77,7 +81,11 @@ func main() {
 		log.Error("Failed to initialize tracer", zap.Error(err))
 		os.Exit(1)
 	}
-	defer t.Shutdown(context.Background())
+	defer func() {
+		if err := t.Shutdown(context.Background()); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to shutdown tracer: %v\n", err)
+		}
+	}()
 
 	// Initialize HTTP client
 	client := httpclient.New(httpclient.Config{
@@ -129,6 +137,12 @@ func main() {
 		select {
 		case <-ctx.Done():
 			log.Info("Shutting down")
+			// Gracefully shutdown health server
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := healthServer.Stop(shutdownCtx); err != nil {
+				log.Error("Failed to stop health server", zap.Error(err))
+			}
 			return
 		case <-ticker.C:
 			requestCount++
