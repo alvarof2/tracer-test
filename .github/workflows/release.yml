@@ -158,19 +158,17 @@ jobs:
 
     # UNTESTED
     # These are cosign attestations, visible with cosign tree.
+    # Generate cosign-signed attestations (in addition to OCI attestations from build-push-action)
     - name: Generate SBOM file
-      run: docker sbom ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} -o spdx-json > sbom.json
+      run: docker sbom ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format spdx-json > sbom.json
 
-    - name: Attest SBOM
+    - name: Attest SBOM with cosign
       run: cosign attest --yes --type spdx --predicate sbom.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
       env:
         COSIGN_EXPERIMENTAL: 1
 
-    - name: Generate provenance file
-      run: docker buildx imagetools inspect ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format '{{ json .Provenance }}' > provenance.json
-
-    - name: Attest provenance
-      run: cosign attest --yes --type slsaprovenance --predicate provenance.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+    - name: Attest provenance with cosign
+      run: cosign attest --yes --type slsaprovenance --predicate ${{ steps.provenance.outputs.bundle }} ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
       env:
         COSIGN_EXPERIMENTAL: 1
 
