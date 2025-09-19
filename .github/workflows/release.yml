@@ -147,11 +147,16 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    - name: Wait for image to be available
+      run: |
+        echo "Waiting for Docker image to be fully pushed..."
+        sleep 10
+
     - name: Generate Docker image provenance attestation
       uses: actions/attest-build-provenance@v3
       with:
         subject-name: ghcr.io/${{ github.repository }}
-        subject-path: ghcr.io/${{ github.repository }}
+        subject-digest: ${{ steps.meta.outputs.digest }}
         push-to-registry: true
 
     - name: Sign Docker image
