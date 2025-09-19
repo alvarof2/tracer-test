@@ -151,26 +151,26 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Wait for image to be available
-      run: |
-        echo "Waiting for Docker image to be fully pushed..."
-        sleep 10
+    # - name: Wait for image to be available
+    #   run: |
+    #     echo "Waiting for Docker image to be fully pushed..."
+    #     sleep 10
 
     # UNTESTED
     # These are cosign attestations, visible with cosign tree.
     # Generate cosign-signed attestations (in addition to OCI attestations from build-push-action)
-    - name: Generate SBOM file
-      run: docker sbom ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format spdx-json > sbom.json
+    # - name: Generate SBOM file
+    #   run: docker sbom ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format spdx-json > sbom.json
 
-    - name: Attest SBOM with cosign
-      run: cosign attest --yes --type spdx --predicate sbom.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
-      env:
-        COSIGN_EXPERIMENTAL: 1
+    # - name: Attest SBOM with cosign
+    #   run: cosign attest --yes --type spdx --predicate sbom.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+    #   env:
+    #     COSIGN_EXPERIMENTAL: 1
 
-    - name: Attest provenance with cosign
-      run: cosign attest --yes --type slsaprovenance --predicate ${{ steps.provenance.outputs.bundle }} ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
-      env:
-        COSIGN_EXPERIMENTAL: 1
+    # - name: Attest provenance with cosign
+    #   run: cosign attest --yes --type slsaprovenance --predicate ${{ steps.provenance.outputs.bundle }} ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+    #   env:
+    #     COSIGN_EXPERIMENTAL: 1
 
     # This is an OCI attestation, not visible with cosign tree.
     # It's visible with docker buildx imagetools inspect ghcr.io/alvarof2/tracer-test:v0.0.1 --format '{{ json .SBOM }}' | jq .
