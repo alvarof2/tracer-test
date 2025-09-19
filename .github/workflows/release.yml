@@ -79,11 +79,24 @@ jobs:
         subject-digest: ${{ steps.digest.outputs.digest }}
         push-to-registry: false
 
+    - name: Install cosign
+      uses: sigstore/cosign-installer@v3
+      with:
+        cosign-release: 'v2.2.4'
+
+    - name: Sign binary
+      run: |
+        cosign sign-blob --yes --bundle tracer-test-${{ matrix.suffix }}.sig tracer-test-${{ matrix.suffix }}
+      env:
+        COSIGN_EXPERIMENTAL: 1
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: tracer-test-${{ matrix.suffix }}
-        path: tracer-test-${{ matrix.suffix }}
+        path: |
+          tracer-test-${{ matrix.suffix }}
+          tracer-test-${{ matrix.suffix }}.sig
 
   docker:
     runs-on: ubuntu-latest
@@ -141,6 +154,17 @@ jobs:
         subject-digest: ${{ steps.meta.outputs.digest }}
         push-to-registry: true
 
+    - name: Sign Docker image
+      uses: sigstore/cosign-installer@v3
+      with:
+        cosign-release: 'v2.2.4'
+
+    - name: Sign the published Docker image
+      run: |
+        cosign sign --yes ${{ steps.meta.outputs.tags }}
+      env:
+        COSIGN_EXPERIMENTAL: 1
+
   release:
     needs: [build, docker]
     runs-on: ubuntu-latest
@@ -195,6 +219,7 @@ jobs:
           - Trace correlation in logs (trace ID and span ID)
           - SLSA Level 3 provenance attestations for supply chain security
           - Software Bill of Materials (SBOM) for dependency transparency
+          - Cryptographic signatures for all artifacts (binaries and Docker images)
           
           ### Downloads
           
@@ -261,10 +286,19 @@ jobs:
           
           ### Verification
           
-          Verify the integrity of downloaded files using the provided SHA256 checksums:
-          
+          **SHA256 Checksums:**
           ```bash
           sha256sum -c tracer-test-<platform>.sha256
+          ```
+          
+          **Cryptographic Signatures:**
+          ```bash
+          # Verify Docker image signature
+          cosign verify --yes ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+          
+          # Verify binary signature
+          cosign verify-blob --certificate-identity-regexp=".*" --certificate-oidc-issuer-regexp=".*" \
+            --signature tracer-test-<platform>.sig tracer-test-<platform>
           ```
         files: |
           artifacts/*/tracer-test-*
