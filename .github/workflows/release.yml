@@ -154,7 +154,7 @@ jobs:
         sleep 10
 
     - name: Generate SBOM attestation
-      uses: actions/attest-sbom@v1
+      uses: actions/attest-sbom@v3
       with:
         subject-name: ghcr.io/${{ github.repository }}
         subject-digest: ${{ steps.build-push.outputs.digest }}
