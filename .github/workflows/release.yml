@@ -159,32 +159,32 @@ jobs:
         subject-digest: ${{ steps.build-push.outputs.digest }}
         push-to-registry: true
 
-    # 📦 Extract SBOMs for each platform
-    - name: Extract SBOMs
-      run: |
-        docker buildx imagetools inspect ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }} \
-          --format '{{ json (index .SBOM "linux/amd64") }}' > sbom-amd64.spdx.json
+    # # 📦 Extract SBOMs for each platform
+    # - name: Extract SBOMs
+    #   run: |
+    #     docker buildx imagetools inspect ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }} \
+    #       --format '{{ json (index .SBOM "linux/amd64") }}' > sbom-amd64.spdx.json
 
-        docker buildx imagetools inspect ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }} \
-          --format '{{ json (index .SBOM "linux/arm64") }}' > sbom-arm64.spdx.json
+    #     docker buildx imagetools inspect ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }} \
+    #       --format '{{ json (index .SBOM "linux/arm64") }}' > sbom-arm64.spdx.json
 
-    # 🔒 Sigstore SBOM attestation (amd64)
-    - name: Generate Sigstore SBOM attestation (amd64)
-      uses: actions/attest-sbom@v3
-      with:
-        subject-name: ghcr.io/${{ github.repository }}
-        subject-digest: ${{ steps.build-push.outputs.digest }}
-        sbom-path: sbom-amd64.spdx.json
-        push-to-registry: true
+    # # 🔒 Sigstore SBOM attestation (amd64)
+    # - name: Generate Sigstore SBOM attestation (amd64)
+    #   uses: actions/attest-sbom@v3
+    #   with:
+    #     subject-name: ghcr.io/${{ github.repository }}
+    #     subject-digest: ${{ steps.build-push.outputs.digest }}
+    #     sbom-path: sbom-amd64.spdx.json
+    #     push-to-registry: true
 
-    # 🔒 Sigstore SBOM attestation (arm64)
-    - name: Generate Sigstore SBOM attestation (arm64)
-      uses: actions/attest-sbom@v3
-      with:
-        subject-name: ghcr.io/${{ github.repository }}
-        subject-digest: ${{ steps.build-push.outputs.digest }}
-        sbom-path: sbom-arm64.spdx.json
-        push-to-registry: true
+    # # 🔒 Sigstore SBOM attestation (arm64)
+    # - name: Generate Sigstore SBOM attestation (arm64)
+    #   uses: actions/attest-sbom@v3
+    #   with:
+    #     subject-name: ghcr.io/${{ github.repository }}
+    #     subject-digest: ${{ steps.build-push.outputs.digest }}
+    #     sbom-path: sbom-arm64.spdx.json
+    #     push-to-registry: true
 
     - name: Install cosign
       uses: sigstore/cosign-installer@v3
