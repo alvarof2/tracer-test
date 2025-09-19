@@ -1,0 +1,198 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# Build output
+tracer-test
+tracer-test.exe
+tracer-test.darwin
+tracer-test.linux
+tracer-test.windows
+
+# Distribution directory
+dist/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# Coverage reports
+coverage.out
+coverage.html
+*.cover
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Docker
+.dockerignore
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Test artifacts
+test-results/
+test-output/
+
+# Documentation build
+docs/_build/
+
+# Backup files
+*.bak
+*.backup
+
+# Archive files
+*.tar
+*.tar.gz
+*.zip
+*.rar
+
+# Node modules (if any frontend components)
+node_modules/
+
+# Python cache (if any Python scripts)
+__pycache__/
+*.pyc
+*.pyo
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Local development
+local/
+dev/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration files with sensitive data
+config.local.*
+secrets.*
+*.key
+*.pem
+*.crt
+*.csr
+
+# Build artifacts
+build/
+dist/
+bin/
+
+# Coverage and profiling
+*.prof
+*.pprof
+cpu.prof
+mem.prof
+block.prof
+mutex.prof
+
+# Go modules download cache
+go.sum.bak
+
+# Air live reload (if using)
+tmp/
+
+# Delve debugger
+__debug_bin
+
+# GoLand
+.idea/
+
+# VS Code
+.vscode/
+
+# Local environment files
+.env.local
+.env.*.local
+
+# Test coverage
+coverage.txt
+coverage.xml
+
+# Benchmark results
+bench.txt
+bench.out
+
+# Performance profiling
+*.prof
+*.pprof
+
+# Go build cache
+.cache/
+
+# Go test cache
+.testcache/
+
+# Go module proxy cache
+$GOPATH/pkg/mod/
+
+# Go workspace
+go.work
+go.work.sum
