@@ -135,6 +135,7 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build and push Docker image
+      id: build-push
       uses: docker/build-push-action@v5
       with:
         context: .
@@ -156,7 +157,7 @@ jobs:
       uses: actions/attest-build-provenance@v3
       with:
         subject-name: ghcr.io/${{ github.repository }}
-        subject-digest: ${{ steps.meta.outputs.digest }}
+        subject-digest: ${{ steps.build-push.outputs.digest }}
         push-to-registry: true
 
     - name: Sign Docker image
