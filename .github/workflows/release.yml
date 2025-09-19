@@ -66,8 +66,55 @@ jobs:
         name: tracer-test-${{ matrix.suffix }}
         path: tracer-test-${{ matrix.suffix }}
 
+  docker:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get tag name
+      id: get_tag
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=tag
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
   release:
-    needs: build
+    needs: [build, docker]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     
@@ -117,6 +164,20 @@ jobs:
           
           ### Downloads
           
+          **Docker Image:**
+          ```bash
+          # Pull the latest image
+          docker pull ghcr.io/${{ github.repository }}:latest
+          
+          # Pull specific version
+          docker pull ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+          
+          # Run the container
+          docker run -p 8080:8080 ghcr.io/${{ github.repository }}:latest
+          ```
+          
+          **Binary Downloads:**
+          
           **Linux:**
           - `tracer-test-linux-amd64` - Linux x86_64
           - `tracer-test-linux-arm64` - Linux ARM64
@@ -131,6 +192,25 @@ jobs:
           
           ### Usage
           
+          **Docker:**
+          ```bash
+          # Basic usage
+          docker run -p 8080:8080 ghcr.io/${{ github.repository }}:latest
+          
+          # Custom URL and interval
+          docker run -p 8080:8080 ghcr.io/${{ github.repository }}:latest \
+            -url "https://api.example.com/data" -interval 10s
+          
+          # External OTLP endpoint with debug logging
+          docker run -p 8080:8080 ghcr.io/${{ github.repository }}:latest \
+            -otlp-endpoint "https://your-otlp-endpoint.com" -log-level debug
+          
+          # Disable OTLP tracing for testing
+          docker run -p 8080:8080 ghcr.io/${{ github.repository }}:latest \
+            -disable-otlp -log-format console
+          ```
+          
+          **Binary:**
           ```bash
           # Basic usage
           ./tracer-test
