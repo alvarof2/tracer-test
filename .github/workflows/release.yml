@@ -329,6 +329,9 @@ jobs:
           
           **Cryptographic Signatures:**
           ```bash
+          # View cosign signatures
+          cosign tree ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+
           # Verify Docker image signature
           cosign verify ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} \
             --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yml@refs/tags/${{ steps.get_tag.outputs.tag }}" \
@@ -337,6 +340,18 @@ jobs:
           # Verify binary signature with cosign
           cosign verify-blob --certificate-identity-regexp=".*" --certificate-oidc-issuer-regexp=".*" \
             --signature tracer-test-<platform>.sig tracer-test-<platform>
+          ```
+
+          **Attestations**
+          ```bash
+          # Verify Docker image provenance attestation
+          gh attestation verify oci://ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+
+          # View Docker image provenance attestation
+          docker buildx imagetools inspect ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format '{{ json .Provenance }}' | jq .
+
+          # View Docker image SBOM
+          docker buildx imagetools inspect ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format '{{ json .SBOM }}'
           ```
         files: |
           artifacts/*/tracer-test-*
