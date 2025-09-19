@@ -34,10 +34,7 @@ func TestMakeRequest_Success(t *testing.T) {
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("test response")); err != nil {
-			// In test context, we can't easily handle this error
-			// The test will fail if there's an issue
-		}
+		_, _ = w.Write([]byte("test response"))
 	}))
 	defer server.Close()
 
@@ -76,10 +73,7 @@ func TestMakeRequest_Error(t *testing.T) {
 	// Create a test server that returns an error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		if _, err := w.Write([]byte("internal server error")); err != nil {
-			// In test context, we can't easily handle this error
-			// The test will fail if there's an issue
-		}
+		_, _ = w.Write([]byte("internal server error"))
 	}))
 	defer server.Close()
 
@@ -222,10 +216,7 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("test response")); err != nil {
-			// In test context, we can't easily handle this error
-			// The test will fail if there's an issue
-		}
+		_, _ = w.Write([]byte("test response"))
 	}))
 	defer server.Close()
 

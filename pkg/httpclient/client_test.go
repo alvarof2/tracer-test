@@ -51,10 +51,7 @@ func TestClient_Get_Success(t *testing.T) {
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("test response")); err != nil {
-			// In test context, we can't easily handle this error
-			// The test will fail if there's an issue
-		}
+		_, _ = w.Write([]byte("test response"))
 	}))
 	defer server.Close()
 
@@ -107,10 +104,7 @@ func TestClient_Get_Error(t *testing.T) {
 	// Create a test server that returns an error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		if _, err := w.Write([]byte("internal server error")); err != nil {
-			// In test context, we can't easily handle this error
-			// The test will fail if there's an issue
-		}
+		_, _ = w.Write([]byte("internal server error"))
 	}))
 	defer server.Close()
 
@@ -217,10 +211,7 @@ func TestInstrumentedTransport_RoundTrip(t *testing.T) {
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("test response")); err != nil {
-			// In test context, we can't easily handle this error
-			// The test will fail if there's an issue
-		}
+		_, _ = w.Write([]byte("test response"))
 	}))
 	defer server.Close()
 
@@ -273,10 +264,7 @@ func TestClient_Timeout(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(2 * time.Second) // Delay longer than timeout
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("delayed response")); err != nil {
-			// In test context, we can't easily handle this error
-			// The test will fail if there's an issue
-		}
+		_, _ = w.Write([]byte("delayed response"))
 	}))
 	defer server.Close()
 
