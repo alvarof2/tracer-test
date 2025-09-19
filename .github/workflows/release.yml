@@ -134,6 +134,9 @@ jobs:
           type=ref,event=tag
           type=raw,value=latest,enable={{is_default_branch}}
 
+    # This step generates OCI provenance attestation and SBOM and its attestation, NOT visible with cosign tree.
+    # Check SBOM and provenance: docker buildx imagetools inspect ghcr.io/alvarof2/tracer-test:v0.0.1 --format '{{ json .SBOM }}' | jq .
+    # Check provenance: docker buildx imagetools inspect ghcr.io/alvarof2/tracer-test:v0.0.1 --format '{{ json .Provenance }}'
     - name: Build and push Docker image
       id: build-push
       uses: docker/build-push-action@v5
@@ -153,28 +156,43 @@ jobs:
         echo "Waiting for Docker image to be fully pushed..."
         sleep 10
 
+    # UNTESTED
+    # These are cosign attestations, visible with cosign tree.
+    - name: Generate SBOM file
+      run: docker sbom ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} -o spdx-json > sbom.json
+
+    - name: Attest SBOM
+      run: cosign attest --yes --type spdx --predicate sbom.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+      env:
+        COSIGN_EXPERIMENTAL: 1
+
+    - name: Generate provenance file
+      run: docker buildx imagetools inspect ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format '{{ json .Provenance }}' > provenance.json
+
+    - name: Attest provenance
+      run: cosign attest --yes --type slsaprovenance --predicate provenance.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+      env:
+        COSIGN_EXPERIMENTAL: 1
+
     # This is an OCI attestation, not visible with cosign tree.
     # It's visible with docker buildx imagetools inspect ghcr.io/alvarof2/tracer-test:v0.0.1 --format '{{ json .SBOM }}' | jq .
-    - name: Generate SBOM attestation
-      uses: actions/attest-sbom@v3
-      with:
-        subject-name: ghcr.io/${{ github.repository }}
-        subject-digest: ${{ steps.build-push.outputs.digest }}
-        push-to-registry: true
+    # - name: Generate SBOM attestation
+    #   uses: actions/attest-sbom@v3
+    #   with:
+    #     subject-name: ghcr.io/${{ github.repository }}
+    #     subject-digest: ${{ steps.build-push.outputs.digest }}
+    #     push-to-registry: true
 
     # This is an OCI attestation, not visible with cosign tree.
     # It's visible with docker buildx imagetools inspect ghcr.io/alvarof2/tracer-test:v0.0.1 --format '{{ json .Provenance }}'
-    - name: Generate Docker image provenance attestation
-      uses: actions/attest-build-provenance@v3
-      with:
-        subject-name: ghcr.io/${{ github.repository }}
-        subject-digest: ${{ steps.build-push.outputs.digest }}
-        push-to-registry: true
+    # - name: Generate Docker image provenance attestation
+    #   uses: actions/attest-build-provenance@v3
+    #   with:
+    #     subject-name: ghcr.io/${{ github.repository }}
+    #     subject-digest: ${{ steps.build-push.outputs.digest }}
+    #     push-to-registry: true
 
-    # This is a Cosign signature, visible with cosign tree
-    # and verifiable with cosign verify
-    # cosign verify ghcr.io/alvarof2/tracer-test:v0.0.1 --certificate-identity "https://github.com/alvarof2/tracer-test/.github/workflows/release.yml@refs/tags/v0.0.1" --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
-    - name: Sign Docker image
+    - name: Install cosign
       uses: sigstore/cosign-installer@v3
       with:
         cosign-release: 'v2.2.4'
@@ -188,24 +206,6 @@ jobs:
         cosign sign --yes ghcr.io/${{ github.repository }}:latest
       env:
         COSIGN_EXPERIMENTAL: 1
-
-    # UNTESTED
-    # These are cosign attestations, visible with cosign tree.
-    # - name: Generate SBOM file
-    #   run: docker sbom ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} -o spdx-json > sbom.json
-
-    # - name: Attest SBOM
-    #   run: cosign attest --yes --type spdx --predicate sbom.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
-    #   env:
-    #     COSIGN_EXPERIMENTAL: 1
-
-    # - name: Generate provenance file
-    #   run: docker buildx imagetools inspect ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} --format '{{ json .Provenance }}' > provenance.json
-
-    # - name: Attest provenance
-    #   run: cosign attest --yes --type slsaprovenance --predicate provenance.json ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
-    #   env:
-    #     COSIGN_EXPERIMENTAL: 1
 
   release:
     needs: [build, docker]
@@ -336,9 +336,11 @@ jobs:
           **Cryptographic Signatures:**
           ```bash
           # Verify Docker image signature
-          cosign verify --yes ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+          cosign verify ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }} \
+            --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yml@refs/tags/${{ steps.get_tag.outputs.tag }}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
           
-          # Verify binary signature
+          # Verify binary signature with cosign
           cosign verify-blob --certificate-identity-regexp=".*" --certificate-oidc-issuer-regexp=".*" \
             --signature tracer-test-<platform>.sig tracer-test-<platform>
           ```
