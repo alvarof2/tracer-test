@@ -138,6 +138,10 @@ jobs:
           sha256sum "$file" > "$file.sha256"
         done
 
+    - name: List files for debugging
+      run: |
+        find artifacts -type f -name "tracer-test-*" | sort
+
     - name: Get tag name
       id: get_tag
       run: |
@@ -238,7 +242,6 @@ jobs:
           ```
         files: |
           artifacts/*/tracer-test-*
-          artifacts/*/tracer-test-*.sha256
         draft: false
         prerelease: false
       env:
