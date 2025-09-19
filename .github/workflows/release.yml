@@ -167,7 +167,8 @@ jobs:
 
     - name: Sign the published Docker image
       run: |
-        cosign sign --yes ${{ steps.meta.outputs.tags }}
+        cosign sign --yes ghcr.io/${{ github.repository }}:${{ steps.get_tag.outputs.tag }}
+        cosign sign --yes ghcr.io/${{ github.repository }}:latest
       env:
         COSIGN_EXPERIMENTAL: 1
 
