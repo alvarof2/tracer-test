@@ -163,10 +163,10 @@ jobs:
     - name: Extract SBOMs
       run: |
         docker buildx imagetools inspect ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }} \
-          --format '{{ json .SBOM."linux/amd64" }}' > sbom-amd64.spdx.json
+          --format '{{ json (index .SBOM "linux/amd64") }}' > sbom-amd64.spdx.json
 
         docker buildx imagetools inspect ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }} \
-          --format '{{ json .SBOM."linux/arm64" }}' > sbom-arm64.spdx.json
+          --format '{{ json (index .SBOM "linux/arm64") }}' > sbom-arm64.spdx.json
 
     # 🔒 Sigstore SBOM attestation (amd64)
     - name: Generate Sigstore SBOM attestation (amd64)
